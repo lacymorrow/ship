@@ -47,7 +47,7 @@ export function bumpVersionFiles(
 	spinner.stop(`Bumped ${fileList} → ${pc.green(newVersion)}`);
 }
 
-export function getStagedFiles(config: ResolvedConfig): string[] {
+export function getFilesToStage(config: ResolvedConfig): string[] {
 	const files: string[] = [...config.packageJsonPaths];
 	for (const f of config.bumpFiles) {
 		files.push(f.path);

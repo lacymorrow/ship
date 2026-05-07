@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { ResolvedConfig, ShipConfig } from "./types.ts";
-import { readJson } from "./utils.ts";
+import { exec, readJson } from "./utils.ts";
 
 const DEFAULTS: Omit<ResolvedConfig, "root"> = {
 	packageJsonPaths: [],
@@ -101,12 +101,7 @@ export async function loadConfig(root: string): Promise<ResolvedConfig> {
 	// Auto-detect homebrew formulaFile from repo slug
 	if (merged.homebrew.tapPath && !merged.homebrew.formulaFile && !merged.homebrew.repoSlug) {
 		try {
-			const remote = (
-				require("node:child_process").execSync(
-					"git remote get-url origin 2>/dev/null",
-					{ cwd: root, encoding: "utf-8" },
-				) as string
-			).trim();
+			const remote = exec("git", ["remote", "get-url", "origin"], { cwd: root }).trim();
 			const match = remote.match(/github\.com[:/]([^/]+)\/([^/.]+)/);
 			if (match) {
 				merged.homebrew.repoSlug = `${match[1]}/${match[2]}`;

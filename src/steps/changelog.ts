@@ -1,17 +1,20 @@
 import * as p from "@clack/prompts";
 import type { ResolvedConfig } from "../types.ts";
-import { run } from "../utils.ts";
+import { exec } from "../utils.ts";
 
 export function generateChangelog(config: ResolvedConfig, tag: string): string {
-	const lastTag = run(
-		"git describe --tags --abbrev=0 2>/dev/null || echo ''",
-		{ cwd: config.root },
-	).trim();
+	let lastTag = "";
+	try {
+		lastTag = exec("git", ["describe", "--tags", "--abbrev=0"], { cwd: config.root }).trim();
+	} catch {
+		// no tags yet
+	}
 
 	let changelog = "";
 	if (lastTag) {
-		changelog = run(
-			`git log ${lastTag}..HEAD --pretty=format:"- %s (%h)" --no-merges`,
+		changelog = exec(
+			"git",
+			["log", `${lastTag}..HEAD`, "--pretty=format:- %s (%h)", "--no-merges"],
 			{ cwd: config.root },
 		).trim();
 	}

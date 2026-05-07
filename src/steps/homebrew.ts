@@ -1,9 +1,11 @@
 import * as p from "@clack/prompts";
 import pc from "picocolors";
+import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { ResolvedConfig } from "../types.ts";
-import { errorText, run } from "../utils.ts";
+import { errorText, exec } from "../utils.ts";
 
 export async function publishHomebrew(
 	config: ResolvedConfig,
@@ -35,14 +37,12 @@ export async function publishHomebrew(
 	spinner.start("Updating Homebrew formula");
 
 	try {
-		run("git checkout main", { cwd: tapPath });
-		run("git pull --rebase origin main", { cwd: tapPath });
+		exec("git", ["checkout", "main"], { cwd: tapPath });
+		exec("git", ["pull", "--rebase", "origin", "main"], { cwd: tapPath });
 
 		const tarballUrl = `https://github.com/${repoSlug}/archive/refs/tags/${tag}.tar.gz`;
-		const sha256 = run(
-			`curl -sL "${tarballUrl}" | shasum -a 256 | cut -d' ' -f1`,
-			{ cwd: tapPath },
-		).trim();
+		const tarball = execFileSync("curl", ["-sL", tarballUrl]);
+		const sha256 = createHash("sha256").update(tarball).digest("hex");
 
 		if (!sha256 || sha256.length !== 64) {
 			spinner.stop(pc.red("Failed to compute SHA256"));
@@ -59,13 +59,13 @@ export async function publishHomebrew(
 		writeFileSync(formulaPath, formula);
 
 		const formulaName = formulaFile.replace(/^Formula\//, "").replace(/\.rb$/, "");
-		run(`git add ${formulaFile}`, { cwd: tapPath });
+		exec("git", ["add", formulaFile], { cwd: tapPath });
 
 		const msg = commitMessage
 			.replace(/\{tag\}/g, tag)
 			.replace(/\{formula\}/g, formulaName);
-		run(`git commit -m "${msg}"`, { cwd: tapPath });
-		run("git push", { cwd: tapPath });
+		exec("git", ["commit", "-m", msg], { cwd: tapPath });
+		exec("git", ["push"], { cwd: tapPath });
 
 		spinner.stop(`Homebrew formula updated to ${pc.green(tag)}`);
 	} catch (err) {

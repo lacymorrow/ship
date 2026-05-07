@@ -1,26 +1,31 @@
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 import type { ResolvedConfig } from "../types.ts";
-import { run } from "../utils.ts";
+import { exec } from "../utils.ts";
+
+function splitFlags(flags: string): string[] {
+	return flags.split(/\s+/).filter(Boolean);
+}
 
 export function commitAndTag(
 	config: ResolvedConfig,
 	tag: string,
-	stagedFiles: string[],
+	filesToStage: string[],
 ): void {
 	const spinner = p.spinner();
 	spinner.start("Committing and tagging");
 
-	if (stagedFiles.length > 0) {
-		run(`git add ${stagedFiles.join(" ")}`, { cwd: config.root });
+	if (filesToStage.length > 0) {
+		exec("git", ["add", ...filesToStage], { cwd: config.root });
 	}
 
 	const message = config.git.commitMessage.replace(/\{tag\}/g, tag);
-	run(
-		`git commit -m "${message}" ${config.git.commitFlags}`,
+	exec(
+		"git",
+		["commit", "-m", message, ...splitFlags(config.git.commitFlags)],
 		{ cwd: config.root },
 	);
-	run(`git tag ${tag}`, { cwd: config.root });
+	exec("git", ["tag", tag], { cwd: config.root });
 
 	spinner.stop(`Committed and tagged ${pc.green(tag)}`);
 }
@@ -33,11 +38,12 @@ export function pushChanges(
 	const spinner = p.spinner();
 	spinner.start("Pushing to GitHub");
 
-	run(
-		`git push origin ${branch} ${config.git.pushFlags}`,
+	exec(
+		"git",
+		["push", "origin", branch, ...splitFlags(config.git.pushFlags)],
 		{ cwd: config.root },
 	);
-	run(`git push origin ${tag}`, { cwd: config.root });
+	exec("git", ["push", "origin", tag], { cwd: config.root });
 
 	spinner.stop("Pushed to GitHub");
 }

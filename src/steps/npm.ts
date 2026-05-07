@@ -1,21 +1,20 @@
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 import type { ResolvedConfig } from "../types.ts";
-import { errorText, run } from "../utils.ts";
+import { errorText, exec } from "../utils.ts";
 
 export async function publishNpm(
 	config: ResolvedConfig,
 	isBeta: boolean,
 ): Promise<boolean> {
 	const { cwd, access } = config.npm;
-	const tagFlag = isBeta ? " --tag beta" : "";
-	const accessFlag = ` --access ${access}`;
+	const baseArgs = ["publish", "--access", access, ...(isBeta ? ["--tag", "beta"] : [])];
 
 	const spinner = p.spinner();
 	spinner.start(`Publishing to npm${isBeta ? " (beta)" : ""}`);
 
 	try {
-		run(`npm publish${accessFlag}${tagFlag}`, { cwd });
+		exec("npm", baseArgs, { cwd });
 		spinner.stop(pc.green(`Published to npm${isBeta ? " (beta)" : ""}`));
 		return true;
 	} catch (err) {
@@ -23,7 +22,6 @@ export async function publishNpm(
 		p.log.message(pc.dim(errorText(err)));
 	}
 
-	// Retry loop
 	while (true) {
 		const action = await p.select({
 			message: "How would you like to proceed?",
@@ -43,7 +41,7 @@ export async function publishNpm(
 		if (action === "login") {
 			p.log.info("Running npm login...");
 			try {
-				run("npm login", { cwd, stdio: "inherit" });
+				exec("npm", ["login"], { cwd, stdio: "inherit" });
 				p.log.success("Logged in to npm");
 			} catch {
 				p.log.error("npm login failed");
@@ -51,7 +49,7 @@ export async function publishNpm(
 			continue;
 		}
 
-		let otpFlag = "";
+		const retryArgs = [...baseArgs];
 		if (action === "otp") {
 			const otp = await p.text({
 				message: "npm OTP",
@@ -61,13 +59,13 @@ export async function publishNpm(
 				},
 			});
 			if (p.isCancel(otp)) continue;
-			otpFlag = ` --otp ${otp}`;
+			retryArgs.push("--otp", otp.trim());
 		}
 
 		const retrySpinner = p.spinner();
 		retrySpinner.start("Publishing to npm");
 		try {
-			run(`npm publish${accessFlag}${tagFlag}${otpFlag}`, { cwd });
+			exec("npm", retryArgs, { cwd });
 			retrySpinner.stop(pc.green("Published to npm"));
 			return true;
 		} catch (err) {

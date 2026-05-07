@@ -4,9 +4,11 @@
   "description": "Interactive release CLI — version bump, git tag, GitHub release, npm publish, Homebrew update",
   "type": "module",
   "bin": {
-    "ship": "./bin/ship.ts"
+    "ship": "./dist/ship.js"
   },
   "scripts": {
+    "build": "bun build bin/ship.ts --outfile dist/ship.js --target node && node -e \"const f=require('fs');const c=f.readFileSync('dist/ship.js','utf8');f.writeFileSync('dist/ship.js',c.replace('#!/usr/bin/env bun','#!/usr/bin/env node').replace('// @bun\\n',''))\"",
+    "prepublishOnly": "bun run build",
     "ship": "bun run bin/ship.ts",
     "ship:beta": "bun run bin/ship.ts --beta"
   },
@@ -30,10 +32,10 @@
   },
   "peerDependencies": {},
   "engines": {
-    "node": ">=18.0.0",
-    "bun": ">=1.0.0"
+    "node": ">=18.0.0"
   },
   "files": [
+    "dist",
     "bin",
     "src",
     "README.md"
