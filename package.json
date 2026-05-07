@@ -1,0 +1,51 @@
+{
+  "name": "@lacymorrow/ship",
+  "version": "0.1.0",
+  "description": "Interactive release CLI — version bump, git tag, GitHub release, npm publish, Homebrew update",
+  "type": "module",
+  "bin": {
+    "ship": "./dist/ship.js"
+  },
+  "scripts": {
+    "build": "bun build bin/ship.ts --outfile dist/ship.js --target node && node -e \"const f=require('fs');const c=f.readFileSync('dist/ship.js','utf8');f.writeFileSync('dist/ship.js',c.replace('#!/usr/bin/env bun','#!/usr/bin/env node').replace('// @bun\\n',''))\"",
+    "prepublishOnly": "bun run build",
+    "ship": "bun run bin/ship.ts",
+    "ship:beta": "bun run bin/ship.ts --beta"
+  },
+  "keywords": [
+    "release",
+    "publish",
+    "cli",
+    "npm",
+    "github",
+    "semver",
+    "interactive"
+  ],
+  "author": "Lacy Morrow <lacy@lacymorrow.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@clack/prompts": "^1.0.0",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "src",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lacymorrow/ship.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lacymorrow/ship/issues"
+  },
+  "homepage": "https://github.com/lacymorrow/ship"
+}
