@@ -1,13 +1,14 @@
 {
   "name": "@lacymorrow/ship",
   "version": "0.1.0",
-  "description": "Interactive release CLI — version bump, git tag, GitHub release, npm publish, Homebrew update",
+  "description": "Interactive release CLI \u2014 version bump, git tag, GitHub release, npm publish, Homebrew update",
   "type": "module",
   "bin": {
     "ship": "./dist/ship.js"
   },
   "scripts": {
     "build": "bun build bin/ship.ts --outfile dist/ship.js --target node && node -e \"const f=require('fs');const c=f.readFileSync('dist/ship.js','utf8');f.writeFileSync('dist/ship.js',c.replace('#!/usr/bin/env bun','#!/usr/bin/env node').replace('// @bun\\n',''))\"",
+    "test": "bun test",
     "prepublishOnly": "bun run build",
     "ship": "bun run bin/ship.ts",
     "ship:beta": "bun run bin/ship.ts --beta"

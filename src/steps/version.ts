@@ -5,7 +5,13 @@ export type BumpType = "patch" | "minor" | "major";
 
 export function bumpVersion(current: string, type: BumpType): string {
 	const base = current.replace(/-.*$/, "");
-	const [major, minor, patch] = base.split(".").map(Number);
+	const parts = base.split(".");
+	const [major, minor, patch] = parts.map(Number);
+	if (parts.length !== 3 || [major, minor, patch].some((n) => !Number.isInteger(n) || n < 0)) {
+		throw new Error(
+			`Cannot bump "${current}": not valid semver. Expected major.minor.patch (e.g. 1.2.3).`,
+		);
+	}
 	switch (type) {
 		case "major":
 			return `${major + 1}.0.0`;
